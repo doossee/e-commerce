@@ -5,12 +5,6 @@ import sys
 
 
 def main():
-    from eskiz_sms import EskizSMS
-
-    eskiz = EskizSMS('doossee.me@gmail.com', 'V2gADtpVSPTCuIbAPKYtaHylyTtS0ZRXuNBmxR8Y', save_token=True, env_file_path='.env')
-    # Don't forget to add env file to .gitignore!
-    response = eskiz.send_sms('+998908708171', message='Helllo doossee')
-    print(response)
 
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')

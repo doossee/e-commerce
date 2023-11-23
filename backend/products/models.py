@@ -1,7 +1,9 @@
 from django.db import models
 from mptt.models import MPTTModel, TreeForeignKey
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+from versatileimagefield.fields import VersatileImageField, PPOIField
 
+User = get_user_model()
 
 class Brand(models.Model):
     name = models.CharField(max_length=100)
@@ -25,8 +27,8 @@ class Product(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     usage = models.TextField()
-    category = models.ForeignKey(to=Category, on_delete=models.SET_NULL)
-    brand = models.ForeignKey(to=Brand, on_delete=models.SET_NULL)
+    category = models.ForeignKey(to=Category, null=True, on_delete=models.SET_NULL)
+    brand = models.ForeignKey(to=Brand, null=True, on_delete=models.SET_NULL)
     color = models.ManyToManyField(to=ProductColor)
     
     price = models.DecimalField(max_digits=9, decimal_places=2)
@@ -39,19 +41,26 @@ class Product(models.Model):
 
 
 class Rating(models.Model):
-    user = models.ForeignKey(to=User, on_delete=models.CASCADE)
-    product = models.ForeignKey(to=Product, on_delete=models.CASCADE)
+    user = models.ForeignKey(to=User, related_query_name='ratings', on_delete=models.CASCADE)
+    product = models.ForeignKey(to=Product, related_name='ratings', on_delete=models.CASCADE)
     rate = models.PositiveSmallIntegerField()
 
 
 class Review(models.Model):
     user = models.ForeignKey(to=User, on_delete=models.CASCADE)
-    product = models.ForeignKey(to=Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(to=Product, related_name='reviews', on_delete=models.CASCADE)
 
 
 class Image(models.Model):
-    original_image = models.ImageField(upload_to='images/')
-    thumbnail = models.ImageField(upload_to='images/thumbnails/', blank=True)
-    product = models.ForeignKey(to=Product, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    image = VersatileImageField(
+        'Image',
+        upload_to='images/',
+        ppoi_field='image_ppoi'
+    )
+    image_ppoi = PPOIField()
+
+    def __str__(self):
+        return self.name
 
 

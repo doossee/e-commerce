@@ -18,7 +18,10 @@ services:
 
   database:
     image: postgres:14.9-alpine
+    ports:
+      - "5432:5432"
     environment:
       - POSTGRES_DB=dbname
       - POSTGRES_USER=dbuser
       - POSTGRES_PASSWORD=pass
+    command: postgres -c listen_addresses=*

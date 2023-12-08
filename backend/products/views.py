@@ -1,47 +1,90 @@
+from rest_framework import viewsets
+from django.db.models import Avg
+from rest_flex_fields.views import FlexFieldsMixin
+from django_filters import rest_framework as filters
+from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_flex_fields import is_expanded
+
+from .permissions import IsOwnerOrReadonly
+from .pagination import CustomPagination
+from .filters import ProductFilter
 from .models import (
     Brand,
     Category,
-    ProductColor,
     Product,
+    ProductUnit,
     Rating,
-    Review,
     Image,
 )
 from .serializers import (
     BrandSerializer,
     CategorySerializer,
-    ProductColorSerializer,
     RatingSerializer,
-    ReviewSerializer,
-    ImageSerializer,
-    ProductSerializer
+    ProductSerializer,
 )
-from rest_framework import viewsets
 
-class BrandViewSet(viewsets.ModelViewSet):
+class BrandViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Brand.objects.all()
     serializer_class = BrandSerializer
 
-class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
 
-class ProductColorViewset(viewsets.ModelViewSet):
-    queryset = ProductColor.objects.all()
-    serializer_class = ProductColorSerializer
+class CategoryViewSet(FlexFieldsMixin,viewsets.ReadOnlyModelViewSet):
+    queryset = Category.objects.all().select_related('parent').filter(parent=None)
+    serializer_class = CategorySerializer
+    permission_classes = [IsOwnerOrReadonly,]
+
+
+# class ProductColorViewset(viewsets.ReadOnlyModelViewSet):
+#     queryset = Color.objects.all()
+#     serializer_class = 
+#     permission_classes = [IsAdminOrReadOnly,]
+
 
 class RatingViewSet(viewsets.ModelViewSet):
     queryset = Rating.objects.all()
     serializer_class = RatingSerializer
+    permission_classes = [IsOwnerOrReadonly,]
 
-class ReviewViewSet(viewsets.ModelViewSet):
-    queryset = Review.object.all()
-    serializer_class = ReviewSerializer
 
-class ImageViewset(viewsets.ModelViewSet):
-    queryset = Image.objects.all()
-    serializer_class = ImageSerializer
+class ProductViewSet(FlexFieldsMixin, viewsets.ReadOnlyModelViewSet):
+    
+    """Products relation"""
 
-class Product(viewsets.ModelViewSet):
-    queryset = Product.object.all()
+    # permission_classes = [IsOwnerOrReadonly,]
     serializer_class = ProductSerializer
+    pagination_class = CustomPagination
+    filter_backends = (filters.DjangoFilterBackend, SearchFilter, OrderingFilter)
+    filterset_class = ProductFilter
+    search_fields = ['title',]
+    ordering_fields = ['created_at', 'rating']
+    permit_list_expands = [
+        'category', 
+        'brand', 
+        'colors', 
+        'ratings',  
+        'images',
+        'units'
+    ]
+    
+    def get_queryset(self):
+
+        queryset = Product.objects.all()\
+                .prefetch_related('colors')\
+                    .annotate(rating=Avg('ratings__rate'))
+
+        if is_expanded(self.request, 'category'):
+            queryset = queryset.select_related('category')
+
+        # if is_expanded(self.request, 'brand'):
+        #     queryset = queryset.select_related('brand')
+
+        if is_expanded(self.request, 'units'):
+            queryset = queryset.prefetch_related('units')
+
+        if is_expanded(self.request, 'ratings'):
+            queryset = queryset.prefetch_related('ratings')
+
+        if is_expanded(self.request, 'images'):
+            queryset = queryset.prefetch_related('images')
+        
+        return queryset

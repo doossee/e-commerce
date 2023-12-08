@@ -24,13 +24,16 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),  
+    path('', include('drfpasswordless.urls')),
+    path('api/v1/', include('clients.urls')),
+    path('api/v1/', include('products.urls')),
+    path('api/v1/', include('orders.urls')),
     re_path(
-        r"^docs/$",
+        r"^api/v1/docs/$",
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
-    #path('', include('clients.urls')),
-    path('', include('drfpasswordless.urls')),
+    path("__debug__/", include("debug_toolbar.urls")),
 ]
 
 if settings.DEBUG:

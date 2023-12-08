@@ -1,58 +1,131 @@
 from django.db import models
+from modeltrans.fields import TranslationField
 from mptt.models import MPTTModel, TreeForeignKey
-from django.contrib.auth import get_user_model
 from versatileimagefield.fields import VersatileImageField, PPOIField
+from colorfield.fields import ColorField
+from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-class Brand(models.Model):
-    name = models.CharField(max_length=100)
-    image = models.ImageField(upload_to='images/')
-    
+class AbstractProductModel(models.Model):
 
-class Category(MPTTModel):
-    name = models.CharField(max_length=100)
-    parent = TreeForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
+    """Abstract Product Model"""
 
-    class MPTTMeta:
-        order_insertion_by = ['name']
-
-    
-class ProductColor(models.Model):
-    name = models.CharField(max_length=100)
-    hex_code = models.CharField(max_length=7)
-
-
-class Product(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     usage = models.TextField()
-    category = models.ForeignKey(to=Category, null=True, on_delete=models.SET_NULL)
-    brand = models.ForeignKey(to=Brand, null=True, on_delete=models.SET_NULL)
-    color = models.ManyToManyField(to=ProductColor)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    i18n = TranslationField(fields=('description', 'usage'), required_languages=('ru','uz'))
+
+    class Meta:
+        abstract = True
+
+
+class Brand(models.Model):
+
+    """Brand model"""
+
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    image = VersatileImageField(
+        'Image',
+        upload_to='images/',
+        ppoi_field='image_ppoi'
+    )
+    image_ppoi = PPOIField()
+
+    i18n = TranslationField(fields=('description',))
+
+    def __str__(self):
+        return self.name
     
-    price = models.DecimalField(max_digits=9, decimal_places=2)
+    class Meta:
+        verbose_name = 'Brand'
+        verbose_name_plural = 'Brands'
+
+
+class Category(MPTTModel):
+
+    """Category model"""
+
+    name = models.CharField(max_length=100)
+    parent = TreeForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
+
+    i18n = TranslationField(fields=('name',))
+
+    def __str__(self):
+        return self.name
+
+    class MPTTMeta:
+        order_insertion_by = ['name']
+    
+    class Meta:
+        verbose_name = 'Category'
+        verbose_name_plural = 'Categories'
+
+    
+class Color(models.Model):
+
+    """Color model"""
+
+    name = models.CharField(max_length=100, default="None")
+    hex = ColorField(default="#A3A3A3")
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = 'Color'
+        verbose_name_plural = 'Colors'        
+
+
+class Product(AbstractProductModel):
+    
+    """Product model"""
+
+    category = models.ForeignKey(to=Category, related_name='products', null=True, on_delete=models.SET_NULL)
+    brand = models.ForeignKey(to=Brand, null=True, on_delete=models.SET_NULL)
+    colors = models.ManyToManyField(to=Color, through='ProductUnit', related_name='colors')
+    
+    price = models.PositiveIntegerField()
     discount = models.PositiveSmallIntegerField()
-    balance = models.PositiveBigIntegerField()
-    rating = models.DecimalField(max_digits=3, decimal_places=2)
 
     is_published = models.BooleanField(default=False)
     is_gift = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.title
 
-class Rating(models.Model):
-    user = models.ForeignKey(to=User, related_query_name='ratings', on_delete=models.CASCADE)
-    product = models.ForeignKey(to=Product, related_name='ratings', on_delete=models.CASCADE)
-    rate = models.PositiveSmallIntegerField()
+    class Meta:
+        verbose_name = 'Product'
+        verbose_name_plural = 'Products'
 
 
-class Review(models.Model):
-    user = models.ForeignKey(to=User, on_delete=models.CASCADE)
-    product = models.ForeignKey(to=Product, related_name='reviews', on_delete=models.CASCADE)
+class ProductUnit(models.Model):
+
+    """Product relation model"""
+
+    product = models.ForeignKey(to=Product, related_name='units', on_delete=models.CASCADE)
+    color = models.ForeignKey(to=Color, related_name='units', on_delete=models.CASCADE)
+    balance = models.PositiveBigIntegerField(editable=False, default=0)
+    image = VersatileImageField(
+        'Image',
+        upload_to='images/',
+        ppoi_field='image_ppoi'
+    )
+    image_ppoi = PPOIField()
+
+    class Meta:
+        unique_together = ('product', 'color')
 
 
 class Image(models.Model):
-    name = models.CharField(max_length=255)
+
+    """Image model"""
+
+    product = models.ForeignKey(to=Product, related_name='images', on_delete=models.CASCADE)
     image = VersatileImageField(
         'Image',
         upload_to='images/',
@@ -61,6 +134,34 @@ class Image(models.Model):
     image_ppoi = PPOIField()
 
     def __str__(self):
-        return self.name
+        return f'{self.product.title}-{self.id} image'
+    
+    class Meta:
+        verbose_name = 'Image'
+        verbose_name_plural = 'Images'
 
+
+class Rating(models.Model):
+
+    """Rating model"""
+
+    RATE_CHOICES = (
+        (1, 'Ok'),
+        (2, 'Fine'),
+        (3, 'Good'),
+        (4, 'Amazing'),
+        (5, 'Incredible')
+    )
+    user = models.ForeignKey(to=User, related_name='ratings', on_delete=models.CASCADE)
+    product = models.ForeignKey(to=Product, related_name='ratings', on_delete=models.CASCADE)
+    rate = models.PositiveSmallIntegerField(choices=RATE_CHOICES)
+    review = models.TextField()
+
+
+    def __str__(self):
+        return f'{self.user}-{self.product}-{self.rate}'
+
+    class Meta:
+        verbose_name = 'Rating'
+        verbose_name_plural = 'Ratings'
 

@@ -4,6 +4,9 @@ from math import ceil
 
 
 class CustomPagination(pagination.PageNumberPagination):
+    
+    """Custom Pagination"""
+
     page_size_query_param = 'limit'
 
     def get_paginated_response(self, data):

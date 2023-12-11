@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from versatileimagefield.serializers import VersatileImageFieldSerializer
 from rest_flex_fields import FlexFieldsModelSerializer
+from clients.serializers import CustomUserSerializer
 from .models import (
     Brand,
     Category,
@@ -13,7 +14,7 @@ from .models import (
 
 class BrandSerializer(serializers.ModelSerializer):
 
-    """Brand Serializer"""
+    """Brand serializer"""
 
     class Meta:
         model = Brand
@@ -45,7 +46,7 @@ class CategorySerializer(AbstractCategorySerializer):
     """Category serializer"""
     
     children = serializers.SerializerMethodField()
-
+    
     def get_children(self, instance):
         
         children = instance.get_children()
@@ -67,8 +68,10 @@ class CategorySerializer(AbstractCategorySerializer):
             'children'
         )
         
-
+        
 class ColorSerializer(serializers.ModelSerializer):
+
+    """Color serializer"""
 
     class Meta:
         model = Color
@@ -86,6 +89,8 @@ class ImageSerializer(serializers.ModelSerializer):
 
 
 class RatingSerializer(serializers.ModelSerializer):
+
+    user = CustomUserSerializer()
 
     """Rating serializer"""
 
@@ -107,7 +112,7 @@ class ProductUnitSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(FlexFieldsModelSerializer):
     
-    """Product Serializer"""
+    """Product serializer"""
 
     # category = AbstractCategorySerializer()
     # brand = BrandSerializer()

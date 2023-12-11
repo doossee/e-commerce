@@ -12,6 +12,8 @@ phone_regex = RegexValidator(
 
 class CustomUser(AbstractUser):
 
+    """Custom User model"""
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = None
     username = None
@@ -28,7 +30,7 @@ class CustomUser(AbstractUser):
         return f"{self.first_name} - {self.last_name}"
 
     def get_short_name(self):
-        return self.username
+        return self.mobile
 
     def has_perm(self, perm, obj=None):
         return True

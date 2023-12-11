@@ -1,18 +1,23 @@
 from rest_framework import viewsets
 from rest_flex_fields.views import FlexFieldsMixin
 from django_filters import rest_framework as filters
-from .permissions import IsOwnerOrReadOnly 
-from products.pagination import CustomPagination
+from .permissions import IsOwnerOrAuthenticated 
 from .models import Order
 from .serializers import OrderSerializer
 
 
 class OrderViewSet(FlexFieldsMixin, viewsets.ModelViewSet):
-    queryset = Order.objects.all()\
-        .prefetch_related('items')
+
+    """Order view"""
+    pagination_class = None
     serializer_class = OrderSerializer
-    permission_classes = [IsOwnerOrReadOnly,]
-    # pagination_class = CustomPagination
-    permit_list_expands = [
-        'items',
-    ]
+    permission_classes = [IsOwnerOrAuthenticated,]
+
+    def get_queryset(self):
+        user_id = self.request.user.id 
+        print(user_id)
+        qs = Order.objects\
+            .filter(user=user_id)\
+            .prefetch_related('items')
+        print(self.request.user)
+        return qs

@@ -3,6 +3,8 @@ from django.contrib.auth.models import BaseUserManager
 
 class CustomUserManager(BaseUserManager):
 
+    """Custom User manager"""
+
     def create_user(self, mobile, password=None, **extra_fields):
         if not mobile:
             raise ValueError("User must have an mobile")

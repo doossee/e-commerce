@@ -22,9 +22,15 @@ class Order(AbstractOrder):
 
     """Order Model"""
 
+    STATUS_CHOICES = (
+        ('process',   'Process'),
+        ('delivered', 'Delivered'),
+        ('cancelled', 'Cancelled')
+    )
+
     total_sum = models.PositiveIntegerField(default=0)
     address = models.CharField(max_length=255)
-    status = models.CharField(max_length=20, choices=[('process', 'Process'), ('delivered', 'Delivered'), ('canceled', 'Canceled')])
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
     delivery_type = models.CharField(max_length=50)
     date_delivery = models.CharField(max_length=50)
 

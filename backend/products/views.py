@@ -3,6 +3,7 @@ from django.db.models import Avg
 from rest_flex_fields.views import FlexFieldsMixin
 from django_filters import rest_framework as filters
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_flex_fields import is_expanded
 
 from .permissions import IsOwnerOrReadonly
@@ -12,12 +13,13 @@ from .models import (
     Brand,
     Category,
     Product,
-    ProductUnit,
+    # ProductUnit,
     Rating,
-    Image,
+    # Image,
 )
 from .serializers import (
     BrandSerializer,
+    AbstractCategorySerializer,
     CategorySerializer,
     RatingSerializer,
     ProductSerializer,
@@ -43,7 +45,7 @@ class CategoryViewSet(FlexFieldsMixin,viewsets.ReadOnlyModelViewSet):
 class RatingViewSet(viewsets.ModelViewSet):
     queryset = Rating.objects.all()
     serializer_class = RatingSerializer
-    permission_classes = [IsOwnerOrReadonly,]
+    permission_classes = [IsAuthenticatedOrReadOnly,]
 
 
 class ProductViewSet(FlexFieldsMixin, viewsets.ReadOnlyModelViewSet):

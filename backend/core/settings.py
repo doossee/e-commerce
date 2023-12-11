@@ -4,7 +4,6 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 AUTH_USER_MODEL = 'clients.CustomUser'
 
 SECRET_KEY = 'django-insecure-38-lgtufsimbflg=3*0x&qres_u_oota+@%km9e&b6*39n)l7+'

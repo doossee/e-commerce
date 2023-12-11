@@ -2,6 +2,8 @@ from rest_framework import permissions
 
 class IsOwnerOrReadonly(permissions.BasePermission):
 
+    """Owner can change the object and all can view list of objects"""
+
     def has_permission(self, request, view):
         return bool(
             request.method in permissions.SAFE_METHODS

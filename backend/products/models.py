@@ -105,7 +105,7 @@ class Product(AbstractProductModel):
 
 class ProductUnit(models.Model):
 
-    """Product relation model"""
+    """Product unit model"""
 
     product = models.ForeignKey(to=Product, related_name='units', on_delete=models.CASCADE)
     color = models.ForeignKey(to=Color, related_name='units', on_delete=models.CASCADE)

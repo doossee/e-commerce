@@ -1,18 +1,14 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
-class IsOwnerOrReadOnly(BasePermission):
+class IsOwnerOrAuthenticated(BasePermission):
+
     """
-    The request is authenticated as a user, or is a read-only request.
+    Only owners or authenticated users 
     """
 
     def has_permission(self, request, view):
-        return bool(
-            request.method in SAFE_METHODS 
-        )
+        return bool(request.user and request.user.is_authenticated) 
     
     def has_object_permission(self, request, view, obj):
-        return bool(
-            request.method in SAFE_METHODS or
-            obj.user == request.user
-        )
+        return bool(request.user == obj.user)
     

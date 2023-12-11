@@ -22,7 +22,6 @@ class CustomUserModelViewSet(
     permission_classes = (IsAuthenticatedOrReadOnly,)
     
     def get_queryset(self):
-        user_id = self.request.user.id
-        qs = User.objects.all().filter(id=user_id)
+        qs = User.objects.all().filter(id=self.request.user.id)
         return qs
 
